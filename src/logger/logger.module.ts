@@ -85,10 +85,36 @@ const traceFormat = format((info) => {
 const consoleFormat = format.combine(
     format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
     format.colorize(),
-    format.printf(({ timestamp, level, context, message, traceId, mdc, ...meta }) =>
-        // `${timestamp} [${level}] [${context}] [${traceId??''}] [${mdc ? JSON.stringify(mdc) : ''}] ${message} ${JSON.stringify(meta)}`
-        `${timestamp} [${level}] [${traceId ?? ''}] [${context}] ${message} ${meta && Object.keys(meta).length > 0 ? JSON.stringify(meta) : ''}`
-    ),
+    format.printf(({ timestamp, level, context, message, traceId, mdc, ...meta }) => {
+        // 提取 stack 字段，保留换行符
+        const { stack, ...restMeta } = meta;
+        
+        // TODO 后续看下这部分拼装逻辑是否可以优化
+        // 格式化堆栈信息（保留换行符）
+        let stackOutput = '';
+        if (stack) {
+            // 如果 stack 是数组，提取第一个元素的 stack 字段
+            if (Array.isArray(stack) && stack.length > 0) {
+                const firstStack = stack[0];
+                if (typeof firstStack === 'object' && firstStack !== null && 'stack' in firstStack) {
+                    stackOutput = `\n${firstStack.stack}`;
+                } else if (typeof firstStack === 'string') {
+                    stackOutput = `\n${firstStack}`;
+                }
+            } else if (typeof stack === 'string') {
+                stackOutput = `\n${stack}`;
+            } else if (typeof stack === 'object' && stack !== null && 'stack' in stack) {
+                stackOutput = `\n${(stack as any).stack}`;
+            }
+        }
+        
+        // 格式化其他 meta 信息
+        const metaOutput = restMeta && Object.keys(restMeta).length > 0 
+            ? ` ${JSON.stringify(restMeta)}` 
+            : '';
+        
+        return `${timestamp} [${level}] [${traceId ?? ''}] [${context}] ${message}${metaOutput}${stackOutput}`;
+    }),
 );
 
 /**

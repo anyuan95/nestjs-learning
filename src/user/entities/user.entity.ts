@@ -8,7 +8,7 @@ import {
 
 @Entity('users') // 指定数据库表名
 export class User {
-  @PrimaryGeneratedColumn() // 自增主键
+  @PrimaryGeneratedColumn({ type: 'bigint' }) // 自增主键
   id: number; // 用户ID
 
   @Column({ type: 'varchar', length: 100, comment: '用户名' })

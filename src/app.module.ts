@@ -12,6 +12,12 @@ import { GlobalExceptionFilter } from './filter/global-exception.filter';
 import { LoggerModule } from './logger/logger.module';
 import { TraceIdMiddleware } from './logger/mdc.middleware';
 import { loadDatabaseConfig } from './config/database.config';
+import { AuthModule } from './auth/auth.module';
+import { PermissionModule } from './permission/permission.module';
+import { RoleModule } from './role/role.module';
+import { RoleAuthGuard } from './auth/role-auth.guard';
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
+import { UtilsController } from './utils/utils.controller';
 
 @Module({
   imports: [
@@ -22,14 +28,27 @@ import { loadDatabaseConfig } from './config/database.config';
     // }),
     UserModule,
     LoggerModule,
+    AuthModule,
+    PermissionModule,
+    RoleModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, UtilsController],
   providers: [
     AppService,
     // 全局限流守卫
     {
       provide: APP_GUARD,
       useClass: ApiLimiterGuard,
+    },
+    // JWT 认证守卫（必须在 RoleAuthGuard 之前执行，用于设置 request.user）
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    // 角色权限守卫（依赖 request.user，必须在 JwtAuthGuard 之后执行）
+    {
+      provide: APP_GUARD,
+      useClass: RoleAuthGuard,
     },
     // TraceId 响应拦截器（需要在最前面，确保响应头包含 traceId）
     {

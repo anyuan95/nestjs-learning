@@ -43,6 +43,14 @@ export class UserService {
     return user;
   }
 
+  async findByEmail(email: string): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { email } });
+    if (!user) {
+      throw new NotFoundException(`用户 "${email}" 不存在`);
+    }
+    return user;
+  }
+
   /**
    * 更新用户信息
    */

@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { SnakeNamingStrategy } from './snake-naming.strategy';
 
 /**
  * 数据库配置接口
@@ -67,6 +68,7 @@ export function loadDatabaseConfig(): TypeOrmModuleOptions {
       synchronize: dbConfig.synchronize ?? defaultConfig.synchronize,
       logging: dbConfig.logging ?? defaultConfig.logging,
       charset: dbConfig.charset ?? defaultConfig.charset,
+      namingStrategy: new SnakeNamingStrategy(), // 使用下划线命名策略，将驼峰命名转换为下划线
     } as TypeOrmModuleOptions;
 
     return mergedConfig;
@@ -87,6 +89,7 @@ export function loadDatabaseConfig(): TypeOrmModuleOptions {
       password: process.env.DB_PASSWORD ?? defaultConfig.password,
       database: process.env.DB_DATABASE ?? defaultConfig.database,
       autoLoadEntities: defaultConfig.autoLoadEntities, // 确保自动加载实体类
+      namingStrategy: new SnakeNamingStrategy(), // 使用下划线命名策略，将驼峰命名转换为下划线
     } as TypeOrmModuleOptions;
     
     return fallbackConfig;
